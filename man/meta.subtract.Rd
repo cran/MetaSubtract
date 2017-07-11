@@ -1,0 +1,71 @@
+\name{meta.subtract}
+\alias{meta.subtract}
+\title{
+Subtracts GWAS results from one or more cohorts from the meta-GWAS results 
+}
+\description{
+Subtracts GWAS results from one or more cohorts from the meta-GWAS results. 
+It can handle the following meta-analysis methods: fixed effects inverse variance weighted, fixed effects sample size weighted, and fixed effect sample size z-sore method. 
+It also can account for single or double genomic control correction of the meta-GWAS results.
+It can be used for whole GWAS, but also for a limited set of SNPs or other genetic markers.
+}
+\usage{
+meta.subtract(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, 
+      lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, 
+      calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", 
+      dir=getwd())
+}
+\arguments{
+  \item{metafile}{
+Name of the file containing the results of the meta-GWAS
+}
+  \item{cohortfiles}{
+Names of the files containing the results of the cohorts
+}
+  \item{metamethod}{
+What kind of meta-GWAS method was used. Can be: FIV = fixed effect inverse variance meta-analysis (default); FSSW = fixed effect sample size weighted meta-analysis; FSZ = fixed effect sample size weighted z-score meta-analysis
+}
+  \item{lambda.meta}{
+Genomic control lambda of the meta-results. If no or single genomic control correction was applied, lambda.meta should be set to 1. Default = 1.
+}
+  \item{lambdas.cohort}{
+Genomic control lambdas of the cohorts. If no genomic control correction was applied, lambdas.cohort should be set to 1 for each cohort. Default = 1.
+}
+  \item{gc_meta}{
+Apply genomic control to the corrected meta-results? If FALSE, corrected meta will not be corrected for genomic control. Default = TRUE.
+}
+  \item{calculate_lambda.meta}{
+Calculate genomic control lambda from the corrected meta-results? If FALSE and gc_meta=TRUE, lambda.meta will be used for genomic control correction of the corrected meta-results. If gc_meta=FALSE, this will be ignored. Default = TRUE.
+}
+  \item{calculate_lambdas.cohort}{
+Calculate genomic control lambdas from the cohort results? If TRUE, lambdas.cohort will be ignored. Default = TRUE.
+}
+  \item{alternative}{
+Name of the file containing alternative codes for the column headers in the GWAS files.
+}
+  \item{dir}{
+Directory where the meta and cohort GWAS files are stored.
+}
+}
+\value{
+A data frame with the corrected meta-GWAS results. This data frame contains the same genetic markers as in the input meta-GWAS file. If a marker was not present in the cohort(s) files, the result of that marker will be the same as in the input meta-GWAS file. If a marker was present in the cohort(s) but not in the meta-GWAS file, it will not be included in the output.
+}
+\author{
+Ilja M. Nolte}
+
+\references{
+Nolte et al. (2017). Missing heritability: is the gap closing? An analysis of 32 complex traits in the Lifelines Cohort Study. Eur J Hum Genet. 2017;25:877-885.
+}
+\seealso{ 
+ \code{\link{MetaSubtract}}.
+}
+\examples{
+metafile="meta_results.txt"
+cohortfiles=c("cohort1_results.txt","cohort2_results.txt")
+meta.subtract(metafile=metafile, cohortfiles=cohortfiles, lambda.meta=1.046, 
+      lambdas.cohort=c(1.0012,1.03), dir=system.file("extdata", package="MetaSubtract"))
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\keyword{ Correct meta-GWAS results}
+\keyword{ Leave-one-out }% __ONLY ONE__ keyword per line

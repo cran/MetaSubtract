@@ -1,5 +1,6 @@
 export(meta.subtract)
+importFrom(stats, cor)
 importFrom(stats, median)
-importFrom(stats, qchisq)
 importFrom(stats, pnorm)
+importFrom(stats, qchisq)
 importFrom(utils, read.table)

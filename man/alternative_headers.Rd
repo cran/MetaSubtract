@@ -4,10 +4,13 @@
 A file with alternative header names in the input files
 }
 \description{
-A file with alternative header names in the input files.
-The file has two columns. The first one contains the variable names as used 
-in the script, the second one contains the header names as specified in 
-the input files.
+A file with alternative header names in the input files, which is used to 
+internally convert the header names from your file(s) to the ones used by
+the script. The file has two columns. The first one contains the variable 
+names as used in the script, the second one contains the header names as 
+specified in the input files. A default file can be found in the subdirectory 
+'extdata' of the installation directory of MetaSubtract. You can add header 
+names of your files to this file to make the internal conversion.
 
 The variable names in the script are the following:
 

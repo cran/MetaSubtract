@@ -13,7 +13,7 @@ It can be used for whole GWAS, but also for a limited set of SNPs or other genet
 meta.subtract(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, 
       lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, 
       calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", 
-      dir=getwd())
+      logfile = "MetaSubtract.log", dir=getwd())
 }
 \arguments{
   \item{metafile}{
@@ -42,6 +42,9 @@ Calculate genomic control lambdas from the cohort results? If TRUE, lambdas.coho
 }
   \item{alternative}{
 Name of the file containing alternative codes for the column headers in the GWAS files.
+}
+  \item{logfile}{
+Name of the file where information on the run is saved.
 }
   \item{dir}{
 Directory where the meta and cohort GWAS files are stored.

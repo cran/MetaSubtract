@@ -1,10 +1,10 @@
-3c03a699fff1b0605251a962469702c7 *DESCRIPTION
-dec5bb0eb838ababade50c4c4feb76d0 *NAMESPACE
-01a71852657eb64c2c2cd05bb3545c7a *R/MetaSubtract.r
-60d2657466797c43388b5bf692635247 *inst/extdata/alternative_headers.txt
+2e8d4f7ea0570f25e7319e0cc10dbe61 *DESCRIPTION
+f5ee08aab36359f1913fbd510359dd06 *NAMESPACE
+1af943b5a48a596ed09420b87cb9e5e3 *R/MetaSubtract.r
+ab2d9278e57aa08f9045c27dbfa305ca *inst/extdata/alternative_headers.txt
 ddeef675dc9794c146c9f4e8a7891394 *inst/extdata/cohort1_results.txt
 39363630767caaaca54b9464cf5e8507 *inst/extdata/cohort2_results.txt
 fd93efc104c6f893c7196f131924167a *inst/extdata/meta_results.txt
 b780a23bc5b9bdaf561f0b875f953b62 *man/MetaSubtract-package.Rd
-c94ef2eb5f829c193d49cfda3e2e5b72 *man/alternative_headers.Rd
-2d3596cc06eba75d0b0e4c2fd1f08dd5 *man/meta.subtract.Rd
+0c84bbecdbc76d48a62bc857965c322e *man/alternative_headers.Rd
+e8236fc60eedb318be8097ee0e05305b *man/meta.subtract.Rd

@@ -65,20 +65,21 @@ subtract.directions <- function (meta_cohort) {
   return(meta_directions.adj[,1])
 }
 
-meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE) {
-  if (!(metamethod %in% c("FIV", "FSSW", "FSZ"))) {
-    stop("ERROR: Please specify one of the following meta-methods: FIV, FSSW, or FSZ")
-  }
-
-  print(paste(" - Pre-set genomic control lambda of the imported meta-results = ",format(lambda.meta, digits=4), sep=""), quote=FALSE)
+meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, logfile = "MetaSubtract.log") {
+  cat(paste(" - Pre-set genomic control lambda of the imported meta-results = ",format(lambda.meta, digits=4)," \n", sep=""))
+  write.table(paste(" - Pre-set genomic control lambda of the imported meta-results = ",format(lambda.meta, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   if (calculate_lambdas.cohort) {
     lambda.cohort <- GClambda(meta_cohort$P.y)
-    print(paste(" - Genomic control lambda calculated from the cohort results = ",format(lambda.cohort, digits=4), sep=""), quote=FALSE)
+    cat(paste(" - Genomic control lambda calculated from the cohort results = ",format(lambda.cohort, digits=4)," \n", sep=""))
+    write.table(paste(" - Genomic control lambda calculated from the cohort results = ",format(lambda.cohort, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   } else {
-    print(paste(" - Pre-set genomic control lambda of the cohort results = ",format(lambda.cohort, digits=4), sep=""), quote=FALSE)
+    cat(paste(" - Pre-set genomic control lambda of the cohort results = ",format(lambda.cohort, digits=4)," \n", sep=""))
+    write.table(paste(" - Pre-set genomic control lambda of the cohort results = ",format(lambda.cohort, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   }
 
   if (toupper(metamethod) == "FIV") { #fixed effect inverse variance
+    cat(" - Assuming a fixed-effects inverse-variance weighted meta-analysis method \n")
+    write.table(" - Assuming a fixed-effects inverse-variance weighted meta-analysis method",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
     adj <- NULL
     if ("BETA.x" %in% names(meta_cohort) & "SE.x" %in% names(meta_cohort)) {
       if ("BETA.y" %in% names(meta_cohort) & "SE.y" %in% names(meta_cohort)) {
@@ -102,10 +103,12 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         if (gc_meta) {
           if (calculate_lambda.meta) {
             lambda.meta.adj <- GClambda(meta_cohort$P.adj)
-            print(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""), quote=FALSE)
-          } else {
+            cat(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+    	} else {
             lambda.meta.adj <- lambda.meta
-            print(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""), quote=FALSE)
+            cat(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           }
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/(meta_cohort$SE.adj[subset]*sqrt(lambda.meta.adj)))
         }
@@ -114,14 +117,22 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.y[subset]
         meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
 
-        adj <- meta_cohort[, c("BETA.adj", "SE.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj")]
+        meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.x[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.x[subset])^2-1/meta_cohort$SE.y[subset]^2*(meta_cohort$BETA.y[subset]-meta_cohort$BETA.x[subset])^2*meta_cohort$SE.adj[subset]^2
+        meta_cohort$QHETP.adj[subset] <- 1-pchisq(meta_cohort$QHET.adj[subset],meta_cohort$NSTUDIES.adj[subset]-1)
+        meta_cohort$I2HET.adj[subset] <- 100*(meta_cohort$QHET.adj[subset]-meta_cohort$NSTUDIES.adj[subset]+1)/meta_cohort$QHET.adj[subset]
+
+        adj <- meta_cohort[, c("BETA.adj", "SE.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj","QHET.adj", "QHETP.adj", "I2HET.adj")]
       } else { 
+        write.table("ERROR: 'BETA' or 'SE' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'BETA' or 'SE' not found in cohort results")
       }
     } else {
+      write.table("ERROR: 'BETA' or 'SE' not found in meta results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
       stop("ERROR: 'BETA' or 'SE' not found in meta results")
     }
   } else if (toupper(metamethod) == "FSSW") { #fixed effect sample size weighted
+    cat(" - Assuming a fixed-effects sample size weighted meta-analysis method \n")
+    write.table(" - Assuming a fixed-effects sample size weighted meta-analysis method",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
     adj <- NULL
     if ("BETA.x" %in% names(meta_cohort) & "N.x" %in% names(meta_cohort)) {
       if ("BETA.y" %in% names(meta_cohort) & "N.y" %in% names(meta_cohort)) {
@@ -146,10 +157,12 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         if (gc_meta) {
           if (calculate_lambda.meta) {
             lambda.meta.adj <- GClambda(meta_cohort$P.adj)
-            print(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""), quote=FALSE)
+            cat(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           } else {
             lambda.meta.adj <- lambda.meta
-            print(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""), quote=FALSE)
+            cat(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           }
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/(meta_cohort$SE.adj[subset]*sqrt(lambda.meta.adj)))
         }
@@ -158,14 +171,22 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.y[subset]
         meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
 
-        adj <- meta_cohort[, c("BETA.adj", "SE.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj")]
+        meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.x[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.x[subset])^2-1/meta_cohort$SE.y[subset]^2*(meta_cohort$BETA.y[subset]-meta_cohort$BETA.x[subset])^2*meta_cohort$SE.adj[subset]^2
+        meta_cohort$QHETP.adj[subset] <- 1-pchisq(meta_cohort$QHET.adj[subset],meta_cohort$NSTUDIES.adj[subset]-1)
+        meta_cohort$I2HET.adj[subset] <- 100*(meta_cohort$QHET.adj[subset]-meta_cohort$NSTUDIES.adj[subset]+1)/meta_cohort$QHET.adj[subset]
+  
+        adj <- meta_cohort[, c("BETA.adj", "SE.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj","QHET.adj", "QHETP.adj", "I2HET.adj")]
       } else { 
+        write.table("ERROR: 'BETA' or 'N' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'BETA' or 'N' not found in cohort results")
       }
     } else {
+      write.table("ERROR: 'BETA' or 'N' not found in meta results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
       stop("ERROR: 'BETA' or 'N' not found in meta results")
     }
-  } else if (toupper(metamethod) == "FSZ") { #fixed BETA sample size z-score method
+  } else if (toupper(metamethod) == "FSZ") { #fixed effects sample size z-score method
+    cat(" - Assuming a fixed-effects sqrt sample size z-score weighted meta-analysis method \n")
+    write.table(" - Assuming a fixed-effects sqrt sample size z-score weighted meta-analysis method",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
     adj <- NULL
     if (!("Z.x" %in% names(meta_cohort))) {
       if ("BETA.x" %in% names(meta_cohort) & "SE.x" %in% names(meta_cohort)) {
@@ -199,10 +220,12 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         if (gc_meta) {
           if (calculate_lambda.meta) {
             lambda.meta.adj <- GClambda(meta_cohort$P.adj)
-            print(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""), quote=FALSE)
+            cat(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Genomic control lambda calculated from the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           } else {
             lambda.meta.adj <- lambda.meta
-            print(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""), quote=FALSE)
+            cat(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           }
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$Z.adj[subset]/sqrt(lambda.meta.adj)))
         }
@@ -213,42 +236,52 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
 
         adj <- meta_cohort[, c("Z.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj")]
       } else { 
+        write.table("ERROR: 'Z' or 'N' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'Z' or 'N' not found in cohort results")
       }
     } else {
+      write.table("ERROR: 'Z' or 'N' not found in meta results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
       stop("ERROR: 'Z' or 'N' not found in meta results")
     }
   }
   lambda.meta.adj <- GClambda(adj$P.adj)
-  print(paste(" - Genomic control lambda calculated of the final corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""), quote=FALSE)  
+  cat(paste(" - Genomic control lambda calculated of the final corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))  
+  write.table(paste(" - Genomic control lambda calculated of the final corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   
   return(adj)
 }
 
-meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", dir = getwd()) {
+meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", logfile = "MetaSubtract.log", dir = getwd()) {
+  print(date())
+  write.table(date(),logfile,col.names=F,row.names=F,quote=F,append=F)
   if (!is.character(dir)) {
-    warning(paste("Invalid format of dir '",dir,"'"))
+    warning(paste("Invalid format of dir '",dir,"'"))	
+    write.table(paste("Invalid format of dir '",dir,"'"),logfile,col.names=F,row.names=F,quote=F,append=T)
   } else if (dir.exists(dir)) {
     setwd(dir)
   } else {
     warning(paste("Directory '",dir,"' does not exist. Current directory is ",getwd(), sep=""))
+	write.table(paste("Directory '",dir,"' does not exist. Current directory is ",getwd(), sep=""),logfile,col.names=F,row.names=F,quote=F,append=T)
   }
   
   if (length(lambdas.cohort)<length(cohortfiles) & !calculate_lambdas.cohort) {
     if (!(length(lambdas.cohort)==1 & lambdas.cohort==1)) {
       warning(paste("Less GC lambdas have been given than cohort files.\n The last",length(cohortfiles)-length(lambdas.cohort),"cohort files will be assumed to have GC lambda=1."))
+	  write.table(paste("Less GC lambdas have been given than cohort files.\n The last",length(cohortfiles)-length(lambdas.cohort),"cohort files will be assumed to have GC lambda=1."),logfile,col.names=F,row.names=F,quote=F,append=T)
     }
     lambdas.cohort <- c(lambdas.cohort,rep(1,length(cohortfiles)-length(lambdas.cohort)))
   }  
 
   if (any(duplicated(cohortfiles))) {
     warning("Some cohort names appear more than once in the list.")
+    write.table("Some cohort names appear more than once in the list.",logfile,col.names=F,row.names=F,quote=F,append=T)
     lambdas.cohort <- lambdas.cohort[!duplicated(cohortfiles)]
     cohortfiles <- cohortfiles[!duplicated(cohortfiles)]
   }
 
   if (!file.exists(alternative)) { 
     if (!file.exists(system.file("extdata",alternative,package="MetaSubtract"))) { 
+      write.table(paste("Alternative header file '",alternative,"' does not exist.", sep=""),logfile,col.names=F,row.names=F,quote=F,append=T)
       stop(paste("Alternative header file '",alternative,"' does not exist.", sep=""))
     } else {
       alternative<-system.file("extdata",alternative,package="MetaSubtract")
@@ -256,9 +289,17 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
   }
   header_translations <- read.table(alternative)
   
+  if (!(metamethod %in% c("FIV", "FSSW", "FSZ"))) {
+    write.table("ERROR: Please specify one of the following meta-analysis methods: FIV, FSSW, or FSZ",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+    stop("ERROR: Please specify one of the following meta-analysis methods: FIV, FSSW, or FSZ")
+  }
+
   if (!file.exists(metafile)) { 
+    write.table(paste("'",metafile,"' does not exist", sep=""),logfile,col.names=F,row.names=F,quote=F,append=T)
     stop(paste("'",metafile,"' does not exist", sep=""))
   }
+  cat(paste("Reading",metafile,"\n"))
+  write.table(paste("Reading",metafile),logfile,col.names=F,row.names=F,quote=F,append=T)
   meta <- read.table(metafile, header = TRUE, as.is = TRUE)
   header_meta <- names(meta)
   headersinfometa <- F_translate_headers(header = header_meta, alternative = header_translations)
@@ -271,9 +312,11 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
   for (cohortfile in cohortfiles) {
     if (!file.exists(cohortfile)) { 
       warning(paste("'",cohortfile,"' does not exist. Meta results will not be corrected.", sep=""))
+      write.table(paste("'",cohortfile,"' does not exist. Meta results will not be corrected.", sep=""),logfile,col.names=F,row.names=F,quote=F,append=T)
     } else {
       cohort <- read.table(cohortfile, header = TRUE, as.is = TRUE)
-      print(paste("Subtracting effects of",cohortfile), quote = FALSE)
+      cat(paste("Subtracting effects of",cohortfile," \n"))
+      write.table(paste("Subtracting effects of",cohortfile),logfile,col.names=F,row.names=F,quote=F,append=T)
       headersinfo <- F_translate_headers(header = names(cohort), alternative = header_translations)
       names(cohort) <- headersinfo$header_h
       cohort$EFFECTALLELE <- toupper(cohort$EFFECTALLELE)
@@ -302,17 +345,32 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       meta_cohort <- meta_cohort[order(meta_cohort$order),]
       # end of edit
 
-      adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile %in% cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort)
+      adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile %in% cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort, logfile=logfile)
       s <- " Columns that have been corrected are: "
       for (i in names(adj)) {
         orig <- sub(".adj","",i)
         if (orig %in% names(meta)) {
+		  index <- which(orig==names(meta))
           meta[,orig] <-  adj[,i]
-          s<-paste(s,orig, sep=", ")
+          s<-paste(s,header_meta[index], sep=", ")
         }  
       }
-      s <- paste(substr(s,1,38), substr(s,41,nchar(s)))
-      print(s, quote = FALSE)
+      s <- paste(substr(s,1,38), substr(s,42,nchar(s)))
+      cat(paste(s," \n"))
+      write.table(s,logfile,col.names=F,row.names=F,quote=F,append=T)
+
+	  names(adj)<-gsub(".adj","",names(adj))
+      s <- " No corrections have been made for: "
+      for (i in (1:length(header_meta))) {
+        orig <- header_meta[i]
+		conv <- names(meta)[i]
+        if (!(orig %in% names(adj)) & !(conv %in% names(adj))) {
+          s<-paste(s,header_meta[i], sep=", ")
+        }  
+      }
+      s <- paste(substr(s,1,35), substr(s,39,nchar(s)))
+      cat(paste(s," \n \n"))
+      write.table(paste(s," \n"),logfile,col.names=F,row.names=F,quote=F,append=T)
     }
   }
   meta <- meta[order(meta$order),]

@@ -1,3 +1,9 @@
+# This is A file with alternative header names in the input files, which is used
+# to internally convert the header names from your file(s) to the ones used by
+# the script. The file has two columns. The first one contains the variable 
+# names as used in the script, the second one contains the header names as 
+# specified in the input files. You can add header names of your file(s) to this 
+# file to make the internal conversion.
 EFFECTALLELE	ALLELE1
 EFFECTALLELE	CODEDALL
 EFFECTALLELE	CODEDALLELE
@@ -5,12 +11,12 @@ EFFECTALLELE	CODED_ALL
 EFFECTALLELE	CODED_ALLELE
 EFFECTALLELE	CODED-ALL
 EFFECTALLELE	CODED-ALLELE
-EFFECTALLELE CODINGALL
-EFFECTALLELE CODINGALLELE
-EFFECTALLELE CODING_ALL
-EFFECTALLELE CODING_ALLELE
-EFFECTALLELE CODING-ALL
-EFFECTALLELE CODING-ALLELE
+EFFECTALLELE 	CODINGALL
+EFFECTALLELE 	CODINGALLELE
+EFFECTALLELE 	CODING_ALL
+EFFECTALLELE 	CODING_ALLELE
+EFFECTALLELE 	CODING-ALL
+EFFECTALLELE 	CODING-ALLELE
 EFFECTALLELE	EFFECTALL
 EFFECTALLELE	EFFECTALLELE
 EFFECTALLELE	EFFECT_ALL

@@ -1,6 +1,6 @@
 F_translate_headers <- function(header, standard = c("MARKER", "EFFECTALLELE", "OTHERALLELE", "BETA", "SE", "Z", "P", "LP", "EAF", "N", "NSTUDIES", "QHET", "QHETP", "I2HET", "DIRECTIONS"), alternative) {
   capitalized <- toupper(header)
-  for(forI in 1:length(standard)) {
+  for (forI in 1:length(standard)) {
     column_no <- F_find_header(standard[forI], alternative, capitalized)
     if (column_no > 0) { 
       header[column_no] <- standard[forI]
@@ -42,7 +42,7 @@ subtract.directions <- function (meta_cohort) {
   meta_directions[meta_directions=="+"] <-  1
   meta_directions[meta_directions=="?"] <-  0
   meta_directions <- matrix(as.integer(meta_directions),nrow=nrow(meta_cohort),byrow=T)
-  cohort_directions <- ifelse(meta_cohort$BETA.y < 0, -1, ifelse(meta_cohort$BETA.y > 0, 1, 0))
+  cohort_directions <- ifelse(meta_cohort$BETA.cohort < 0, -1, ifelse(meta_cohort$BETA.cohort > 0, 1, 0))
   cohort_directions[is.na(cohort_directions)] <- 0
   
   ic<-1
@@ -69,7 +69,7 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
   cat(paste(" - Pre-set genomic control lambda of the imported meta-results = ",format(lambda.meta, digits=4)," \n", sep=""))
   write.table(paste(" - Pre-set genomic control lambda of the imported meta-results = ",format(lambda.meta, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   if (calculate_lambdas.cohort) {
-    lambda.cohort <- GClambda(meta_cohort$P.y)
+    lambda.cohort <- GClambda(meta_cohort$P.cohort)
     cat(paste(" - Genomic control lambda calculated from the cohort results = ",format(lambda.cohort, digits=4)," \n", sep=""))
     write.table(paste(" - Genomic control lambda calculated from the cohort results = ",format(lambda.cohort, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   } else {
@@ -81,23 +81,23 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
     cat(" - Assuming a fixed-effects inverse-variance weighted meta-analysis method \n")
     write.table(" - Assuming a fixed-effects inverse-variance weighted meta-analysis method",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
     adj <- NULL
-    if ("BETA.x" %in% names(meta_cohort) & "SE.x" %in% names(meta_cohort)) {
-      if ("BETA.y" %in% names(meta_cohort) & "SE.y" %in% names(meta_cohort)) {
-        meta_cohort$BETA.adj <- meta_cohort$BETA.x
-        meta_cohort$SE.adj <- meta_cohort$SE.x/sqrt(lambda.meta)
+    if ("BETA.meta" %in% names(meta_cohort) & "SE.meta" %in% names(meta_cohort)) {
+      if ("BETA.cohort" %in% names(meta_cohort) & "SE.cohort" %in% names(meta_cohort)) {
+        meta_cohort$BETA.adj <- meta_cohort$BETA.meta
+        meta_cohort$SE.adj <- meta_cohort$SE.meta/sqrt(lambda.meta)
         meta_cohort$P.adj <- 2*pnorm(-abs(meta_cohort$BETA.adj)/meta_cohort$SE.adj)
         meta_cohort$LP.adj <- -log10(meta_cohort$P.adj)
-        meta_cohort$EAF.adj <- meta_cohort$EAF.x
-        meta_cohort$N.adj <- meta_cohort$N.x
+        meta_cohort$EAF.adj <- meta_cohort$EAF.meta
+        meta_cohort$N.adj <- meta_cohort$N.meta
         meta_cohort$NSTUDIES.adj <- meta_cohort$NSTUDIES
 		meta_cohort$DIRECTIONS.adj <- subtract.directions(meta_cohort)
-        meta_cohort$SE.y <- meta_cohort$SE.y/sqrt(lambda.cohort)
+        meta_cohort$SE.cohort <- meta_cohort$SE.cohort/sqrt(lambda.cohort)
         
-        subset <- which(!is.na(meta_cohort$BETA.y) & !is.na(meta_cohort$SE.y))
+        subset <- which(!is.na(meta_cohort$BETA.cohort) & !is.na(meta_cohort$SE.cohort))
 
         meta.weight <- 1/(meta_cohort$SE.adj[subset])^2
-        cohort.weight <- 1/(meta_cohort$SE.y[subset])^2
-        meta_cohort$BETA.adj[subset] <- (meta.weight*meta_cohort$BETA.adj[subset]-cohort.weight*meta_cohort$BETA.y[subset])/(meta.weight-cohort.weight)
+        cohort.weight <- 1/(meta_cohort$SE.cohort[subset])^2
+        meta_cohort$BETA.adj[subset] <- (meta.weight*meta_cohort$BETA.adj[subset]-cohort.weight*meta_cohort$BETA.cohort[subset])/(meta.weight-cohort.weight)
         meta_cohort$SE.adj[subset] <- 1/sqrt(meta.weight-cohort.weight)
         meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/meta_cohort$SE.adj[subset])
         if (gc_meta) {
@@ -113,15 +113,22 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/(meta_cohort$SE.adj[subset]*sqrt(lambda.meta.adj)))
         }
         meta_cohort$LP.adj[subset] <- -log10(meta_cohort$P.adj[subset])
-        meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.y[subset]*meta_cohort$EAF.y[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.y[subset])
-        meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.y[subset]
+        meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.cohort[subset]*meta_cohort$EAF.cohort[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.cohort[subset])
+        meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.cohort[subset]
         meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
 
-        meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.x[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.x[subset])^2-1/meta_cohort$SE.y[subset]^2*(meta_cohort$BETA.y[subset]-meta_cohort$BETA.x[subset])^2*meta_cohort$SE.adj[subset]^2
+        meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
         meta_cohort$QHETP.adj[subset] <- 1-pchisq(meta_cohort$QHET.adj[subset],meta_cohort$NSTUDIES.adj[subset]-1)
         meta_cohort$I2HET.adj[subset] <- 100*(meta_cohort$QHET.adj[subset]-meta_cohort$NSTUDIES.adj[subset]+1)/meta_cohort$QHET.adj[subset]
 
         adj <- meta_cohort[, c("BETA.adj", "SE.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj","QHET.adj", "QHETP.adj", "I2HET.adj")]
+
+        if ("Z" %in% names(meta_cohort) | "Z.meta" %in% names(meta_cohort)) { 
+		  meta_cohort$Z.adj[subset] <- meta_cohort$BETA.adj[subset] / meta_cohort$SE.adj[subset] 
+		  adj <- data.frame(adj, Z.adj=meta_cohort$Z.adj)
+		}
+		print(names(adj))
+
       } else { 
         write.table("ERROR: 'BETA' or 'SE' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'BETA' or 'SE' not found in cohort results")
@@ -134,25 +141,25 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
     cat(" - Assuming a fixed-effects sample size weighted meta-analysis method \n")
     write.table(" - Assuming a fixed-effects sample size weighted meta-analysis method",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
     adj <- NULL
-    if ("BETA.x" %in% names(meta_cohort) & "N.x" %in% names(meta_cohort)) {
-      if ("BETA.y" %in% names(meta_cohort) & "N.y" %in% names(meta_cohort)) {
-        meta_cohort$BETA.adj <- meta_cohort$BETA.x
-        meta_cohort$SE.adj <- meta_cohort$SE.x/sqrt(lambda.meta)
+    if ("BETA.meta" %in% names(meta_cohort) & "N.meta" %in% names(meta_cohort)) {
+      if ("BETA.cohort" %in% names(meta_cohort) & "N.cohort" %in% names(meta_cohort)) {
+        meta_cohort$BETA.adj <- meta_cohort$BETA.meta
+        meta_cohort$SE.adj <- meta_cohort$SE.meta/sqrt(lambda.meta)
         meta_cohort$P.adj <- 2*pnorm(-abs(meta_cohort$BETA.adj)/meta_cohort$SE.adj)
         meta_cohort$LP.adj <- -log10(meta_cohort$P.adj)
-        meta_cohort$EAF.adj <- meta_cohort$EAF.x
-        meta_cohort$N.adj <- meta_cohort$N.x
+        meta_cohort$EAF.adj <- meta_cohort$EAF.meta
+        meta_cohort$N.adj <- meta_cohort$N.meta
         meta_cohort$NSTUDIES.adj <- meta_cohort$NSTUDIES
 		meta_cohort$DIRECTIONS.adj <- subtract.directions(meta_cohort)
 
-        meta_cohort$SE.y <- meta_cohort$SE.y/sqrt(lambda.cohort)
+        meta_cohort$SE.cohort <- meta_cohort$SE.cohort/sqrt(lambda.cohort)
 
-        subset <- which(!is.na(meta_cohort$BETA.y) & !is.na(meta_cohort$SE.y))
+        subset <- which(!is.na(meta_cohort$BETA.cohort) & !is.na(meta_cohort$SE.cohort))
         
         meta.weight <- meta_cohort$N.adj[subset]
-        cohort.weight <- meta_cohort$N.y[subset]
-        meta_cohort$BETA.adj[subset] <- (meta.weight*meta_cohort$BETA.adj[subset]-cohort.weight*meta_cohort$BETA.y[subset])/(meta.weight-cohort.weight)
-        meta_cohort$SE.adj[subset] <- sqrt(1/(1/(meta_cohort$SE.adj[subset])^2-1/(meta_cohort$SE.y[subset])^2))
+        cohort.weight <- meta_cohort$N.cohort[subset]
+        meta_cohort$BETA.adj[subset] <- (meta.weight*meta_cohort$BETA.adj[subset]-cohort.weight*meta_cohort$BETA.cohort[subset])/(meta.weight-cohort.weight)
+        meta_cohort$SE.adj[subset] <- sqrt(1/(1/(meta_cohort$SE.adj[subset])^2-1/(meta_cohort$SE.cohort[subset])^2))
         meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/meta_cohort$SE.adj[subset])
         if (gc_meta) {
           if (calculate_lambda.meta) {
@@ -167,15 +174,20 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/(meta_cohort$SE.adj[subset]*sqrt(lambda.meta.adj)))
         }
         meta_cohort$LP.adj[subset] <- -log10(meta_cohort$P.adj[subset])
-        meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.y[subset]*meta_cohort$EAF.y[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.y[subset])
-        meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.y[subset]
+        meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.cohort[subset]*meta_cohort$EAF.cohort[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.cohort[subset])
+        meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.cohort[subset]
         meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
 
-        meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.x[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.x[subset])^2-1/meta_cohort$SE.y[subset]^2*(meta_cohort$BETA.y[subset]-meta_cohort$BETA.x[subset])^2*meta_cohort$SE.adj[subset]^2
+        meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
         meta_cohort$QHETP.adj[subset] <- 1-pchisq(meta_cohort$QHET.adj[subset],meta_cohort$NSTUDIES.adj[subset]-1)
         meta_cohort$I2HET.adj[subset] <- 100*(meta_cohort$QHET.adj[subset]-meta_cohort$NSTUDIES.adj[subset]+1)/meta_cohort$QHET.adj[subset]
   
         adj <- meta_cohort[, c("BETA.adj", "SE.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj","QHET.adj", "QHETP.adj", "I2HET.adj")]
+
+        if ("Z.meta" %in% names(meta_cohort)) { 
+		  meta_cohort$Z.adj[subset] <- meta_cohort$BETA.adj[subset] / meta_cohort$SE.adj[subset] 
+		  adj <- data.frame(adj, Z.adj=meta_cohort$Z.adj)
+		}
       } else { 
         write.table("ERROR: 'BETA' or 'N' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'BETA' or 'N' not found in cohort results")
@@ -188,34 +200,34 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
     cat(" - Assuming a fixed-effects sqrt sample size z-score weighted meta-analysis method \n")
     write.table(" - Assuming a fixed-effects sqrt sample size z-score weighted meta-analysis method",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
     adj <- NULL
-    if (!("Z.x" %in% names(meta_cohort))) {
-      if ("BETA.x" %in% names(meta_cohort) & "SE.x" %in% names(meta_cohort)) {
-        meta_cohort$Z.x <- meta_cohort$BETA.x/meta_cohort$SE.x
+    if (!("Z.meta" %in% names(meta_cohort))) {
+      if ("BETA.meta" %in% names(meta_cohort) & "SE.meta" %in% names(meta_cohort)) {
+        meta_cohort$Z.meta <- meta_cohort$BETA.meta/meta_cohort$SE.meta
       }
     }
-    if (!("Z.y" %in% names(meta_cohort))) {
-      if ("BETA.y" %in% names(meta_cohort) & "SE.y" %in% names(meta_cohort)) {
-        meta_cohort$Z.y <- meta_cohort$BETA.y/meta_cohort$SE.y
+    if (!("Z.cohort" %in% names(meta_cohort))) {
+      if ("BETA.cohort" %in% names(meta_cohort) & "SE.cohort" %in% names(meta_cohort)) {
+        meta_cohort$Z.cohort <- meta_cohort$BETA.cohort/meta_cohort$SE.cohort
       }
     }
     
-    if ("Z.x" %in% names(meta_cohort) & "N.x" %in% names(meta_cohort)) {
-      if ("Z.y" %in% names(meta_cohort) & "N.y" %in% names(meta_cohort)) {
-        meta_cohort$Z.adj <- meta_cohort$Z.x*sqrt(lambda.meta)
-        meta_cohort$SE.adj <- meta_cohort$SE.x/sqrt(lambda.meta)
+    if ("Z.meta" %in% names(meta_cohort) & "N.meta" %in% names(meta_cohort)) {
+      if ("Z.cohort" %in% names(meta_cohort) & "N.cohort" %in% names(meta_cohort)) {
+        meta_cohort$Z.adj <- meta_cohort$Z.meta*sqrt(lambda.meta)
+        meta_cohort$SE.adj <- meta_cohort$SE.meta/sqrt(lambda.meta)
         meta_cohort$P.adj <- 2*pnorm(-abs(meta_cohort$Z.adj))
         meta_cohort$LP.adj <- -log10(meta_cohort$P.adj)
-        meta_cohort$EAF.adj <- meta_cohort$EAF.x
-        meta_cohort$N.adj <- meta_cohort$N.x
+        meta_cohort$EAF.adj <- meta_cohort$EAF.meta
+        meta_cohort$N.adj <- meta_cohort$N.meta
         meta_cohort$NSTUDIES.adj <- meta_cohort$NSTUDIES
 		meta_cohort$DIRECTIONS.adj <- subtract.directions(meta_cohort)
 
-        meta_cohort$Z.y <- meta_cohort$Z.y*sqrt(lambda.cohort)
-        meta_cohort$SE.y <- meta_cohort$SE.y/sqrt(lambda.cohort)
+        meta_cohort$Z.cohort <- meta_cohort$Z.cohort*sqrt(lambda.cohort)
+        meta_cohort$SE.cohort <- meta_cohort$SE.cohort/sqrt(lambda.cohort)
         
-        subset <- which(!is.na(meta_cohort$Z.y) & !is.na(meta_cohort$N.y))
+        subset <- which(!is.na(meta_cohort$Z.cohort) & !is.na(meta_cohort$N.cohort))
         
-        meta_cohort$Z.adj[subset] <- (sqrt(meta_cohort$N.adj[subset])*meta_cohort$Z.adj[subset]-sqrt(meta_cohort$N.y[subset])*meta_cohort$Z.y[subset]) / sqrt((meta_cohort$N.adj[subset]-meta_cohort$N.y[subset]))
+        meta_cohort$Z.adj[subset] <- (sqrt(meta_cohort$N.adj[subset])*meta_cohort$Z.adj[subset]-sqrt(meta_cohort$N.cohort[subset])*meta_cohort$Z.cohort[subset]) / sqrt((meta_cohort$N.adj[subset]-meta_cohort$N.cohort[subset]))
         meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$Z.adj[subset]))
         if (gc_meta) {
           if (calculate_lambda.meta) {
@@ -230,8 +242,8 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$Z.adj[subset]/sqrt(lambda.meta.adj)))
         }
         meta_cohort$LP.adj[subset] <- -log10(meta_cohort$P.adj[subset])
-        meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.y[subset]*meta_cohort$EAF.y[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.y[subset])
-        meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.y[subset]
+        meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.cohort[subset]*meta_cohort$EAF.cohort[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.cohort[subset])
+        meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.cohort[subset]
         meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
 
         adj <- meta_cohort[, c("Z.adj", "P.adj", "LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj")]
@@ -244,10 +256,10 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
       stop("ERROR: 'Z' or 'N' not found in meta results")
     }
   }
+  
   lambda.meta.adj <- GClambda(adj$P.adj)
   cat(paste(" - Genomic control lambda calculated of the final corrected meta-results = ",format(lambda.meta.adj, digits=4)," \n", sep=""))  
   write.table(paste(" - Genomic control lambda calculated of the final corrected meta-results = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
-  
   return(adj)
 }
 
@@ -322,30 +334,43 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       cohort$EFFECTALLELE <- toupper(cohort$EFFECTALLELE)
       cohort$OTHERALLELE <- toupper(cohort$OTHERALLELE)
     
-      meta_cohort <- merge(meta, cohort, by = "MARKER", all.x = TRUE, all.y = FALSE)
-    
+      meta_cohort <- merge(meta, cohort, by = "MARKER", all.x = TRUE, all.y = FALSE, suffixes=c(".meta", ".cohort"))
       # flip alleles in cohort so that they match with those in the meta and adjust BETA and EAF
-      subset = !is.na(meta_cohort$EFFECTALLELE.y) & meta_cohort$EFFECTALLELE.x != meta_cohort$EFFECTALLELE.y
-      meta_cohort[subset, c("BETA.y")] <- -meta_cohort[subset, c("BETA.y")]
-      meta_cohort[subset, c("EAF.y")] <- 1-meta_cohort[subset, c("EAF.y")]
-      meta_cohort[subset, c("EFFECTALLELE.y", "OTHERALLELE.y")] <- meta_cohort[subset, c("OTHERALLELE.y", "EFFECTALLELE.y")]  
+      subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$EFFECTALLELE.cohort
+      meta_cohort[subset, c("BETA.cohort")] <- -meta_cohort[subset, c("BETA.cohort")]
+      meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
+      meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- meta_cohort[subset, c("OTHERALLELE.cohort", "EFFECTALLELE.cohort")]  
     
       # strand switch of alleles
-      subset = !is.na(meta_cohort$EFFECTALLELE.y) & meta_cohort$EFFECTALLELE.x == complement(meta_cohort$EFFECTALLELE.y) & meta_cohort$EFFECTALLELE.x != complement(meta_cohort$OTHERALLELE.y)
-      if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.y", "OTHERALLELE.y")] <- cbind(complement(meta_cohort[subset, "EFFECTALLELE.y"]), complement(meta_cohort[subset, "OTHERALLELE.y"])) }
+      subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != complement(meta_cohort$OTHERALLELE.cohort)
+      if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "EFFECTALLELE.cohort"]), complement(meta_cohort[subset, "OTHERALLELE.cohort"])) }
     
-      # strand switch of alleles and flip alleles in cohort so that they match with thoSE in the meta and adjust BETA and EAF
-      subset = !is.na(meta_cohort$EFFECTALLELE.y) & meta_cohort$EFFECTALLELE.x == complement(meta_cohort$OTHERALLELE.y) & meta_cohort$EFFECTALLELE.x != complement(meta_cohort$OTHERALLELE.y)
-      meta_cohort[subset, c("BETA.y")] <-  -meta_cohort[subset, c("BETA.y")]
-      meta_cohort[subset, c("EAF.y")] <- 1-meta_cohort[subset, c("EAF.y")]
-      if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.y", "OTHERALLELE.y")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.y"]), complement(meta_cohort[subset, "EFFECTALLELE.y"])) }
+      # strand switch of alleles and flip alleles in cohort so that they match with those in the meta and adjust BETA and EAF
+      subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$OTHERALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != complement(meta_cohort$OTHERALLELE.cohort)
+      meta_cohort[subset, c("BETA.cohort")] <-  -meta_cohort[subset, c("BETA.cohort")]
+      meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
+      if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.cohort"]), complement(meta_cohort[subset, "EFFECTALLELE.cohort"])) }
       
+      # remove genetic markers that still do not match alleles
+      subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & !( (meta_cohort$EFFECTALLELE.meta == meta_cohort$EFFECTALLELE.meta & meta_cohort$OTHERALLELE.meta == meta_cohort$OTHERALLELE.cohort) |
+	                                                   (meta_cohort$EFFECTALLELE.meta == meta_cohort$OTHERALLELE.cohort & meta_cohort$OTHERALLELE.meta == meta_cohort$EFFECTALLELE.cohort) |
+													   (meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$OTHERALLELE.meta == complement(meta_cohort$OTHERALLELE.cohort)) |
+													   (meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$OTHERALLELE.cohort) & meta_cohort$OTHERALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort)) )
+      s<-paste("Number of genetic markers removed because of mismatch in alleles: ", sum(subset), " (", signif(100*sum(subset)/nrow(cohort),2), "%)",sep="")
+	  if (sum(subset)>0) { 
+        cat(paste(s," \n"))
+	    meta_cohort[subset, c("BETA.cohort", "SE.cohort", "P.cohort")] <- NA 
+		write.table(meta_cohort[subset,c("MARKER", "EFFECTALLELE.meta", "OTHERALLELE.meta", "EFFECTALLELE.cohort", "OTHERALLELE.cohort")],paste(cohortfile,".allele_mismatch.txt",sep=""), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t") 
+	  }
+	  write.table(s,logfile,col.names=F,row.names=F,quote=F,append=T)
+	  
       # added by L.Corbin 7th August 2017
       # corrects error which was leading to assignment of adjusted betas to wrong SNPs
       meta_cohort <- meta_cohort[order(meta_cohort$order),]
       # end of edit
 
       adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile %in% cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort, logfile=logfile)
+
       s <- " Columns that have been corrected are: "
       for (i in names(adj)) {
         orig <- sub(".adj","",i)

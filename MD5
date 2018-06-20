@@ -1,10 +1,11 @@
-818ae465f1ee8f2471f7a7f1d3c63e36 *DESCRIPTION
+2ce613b868bc6b92cde2ffcadcbd8ffd *DESCRIPTION
 f5ee08aab36359f1913fbd510359dd06 *NAMESPACE
-a72688c61d861b8cd66f8e445573d293 *R/MetaSubtract.r
+398da6a7051d2bf8f7f9324a9babbfa3 *R/MetaSubtract.r
 7438bd831b3e3892c374db28d30f0e86 *inst/extdata/alternative_headers.txt
 8988efd4d70122cda5cefe23e1268a86 *inst/extdata/cohort1_results.txt
-39363630767caaaca54b9464cf5e8507 *inst/extdata/cohort2_results.txt
+6c6aa06d795920bbf720f8c9bd0ce8bc *inst/extdata/cohort2_results.txt
+ec6a4d492c5b89916aaaaf4e99efad7f *inst/extdata/cohort3_results.txt
 fd93efc104c6f893c7196f131924167a *inst/extdata/meta_results.txt
-853322641cc22bf6a483de8f19034a3b *man/MetaSubtract-package.Rd
+f36f4169a29dbe726672974c9519b4b5 *man/MetaSubtract-package.Rd
 0c84bbecdbc76d48a62bc857965c322e *man/alternative_headers.Rd
-e8236fc60eedb318be8097ee0e05305b *man/meta.subtract.Rd
+ac391fa10f01896eba6c0bfa89b17198 *man/meta.subtract.Rd

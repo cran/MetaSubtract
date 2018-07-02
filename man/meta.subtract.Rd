@@ -17,7 +17,7 @@ meta.subtract(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1,
       calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", 
 	  save.as.data.frame = TRUE, 
 	  savefile = "meta.results_corrected.with.MetaSubtract.txt.gz", 
-      logfile = "MetaSubtract.log", dir)
+      logfile = "MetaSubtract.log", dir=tempdir())
 }
 \arguments{
   \item{metafile}{

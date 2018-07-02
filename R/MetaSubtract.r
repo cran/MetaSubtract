@@ -359,34 +359,34 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
   return(adj)
 }
 
-meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", save.as.data.frame = TRUE, savefile = "meta.results_corrected.with.MetaSubtract.txt.gz", logfile = "MetaSubtract.log", dir) {
+meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", save.as.data.frame = TRUE, savefile = "meta.results_corrected.with.MetaSubtract.txt.gz", logfile = "MetaSubtract.log", dir=tempdir()) {
   cat(paste("Analysis started",date(),"\n"))
   if (!is.character(dir)) {
     stop(paste("Invalid format of dir '",dir,"'. Current directory is ",getwd(), sep=""))	
-    write.table(paste("Invalid format of dir '",dir,"'"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+    write.table(paste("Invalid format of dir '",dir,"'"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
   } else if (!dir.exists(dir)) {
     stop(paste("Directory '",dir,"' does not exist. Current directory is ",getwd(), sep=""))
-	write.table(paste("Directory '",dir,"' does not exist. Current directory is ",getwd(), sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+	write.table(paste("Directory '",dir,"' does not exist. Current directory is ",getwd(), sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
   }
-  write.table(paste("Analysis started",date(),"\n"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=F)
+  write.table(paste("Analysis started",date(),"\n"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=F)
 
   
   if (length(lambdas.cohort)<length(cohortfiles) & !calculate_lambdas.cohort) {
     warning(paste("Less GC lambdas have been given than cohort files.\n The last",length(cohortfiles)-length(lambdas.cohort),"cohort files will be assumed to have GC lambda=1."))
-    write.table(paste("Less GC lambdas have been given than cohort files.\n The last",length(cohortfiles)-length(lambdas.cohort),"cohort files will be assumed to have GC lambda=1."),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+    write.table(paste("Less GC lambdas have been given than cohort files.\n The last",length(cohortfiles)-length(lambdas.cohort),"cohort files will be assumed to have GC lambda=1."),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
     lambdas.cohort <- c(lambdas.cohort,rep(1,length(cohortfiles)-length(lambdas.cohort)))
   }  
 
   if (any(duplicated(cohortfiles))) {
     warning("Some cohort names appear more than once in the list.")
-    write.table("Some cohort names appear more than once in the list.",paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+    write.table("Some cohort names appear more than once in the list.",file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
     lambdas.cohort <- lambdas.cohort[!duplicated(cohortfiles)]
     cohortfiles <- cohortfiles[!duplicated(cohortfiles)]
   }
 
   if (!file.exists(alternative)) { 
     if (!file.exists(system.file("extdata",alternative,package="MetaSubtract"))) { 
-      write.table(paste("Alternative header file '",alternative,"' does not exist.", sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(paste("Alternative header file '",alternative,"' does not exist.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
       stop(paste("Alternative header file '",alternative,"' does not exist.", sep=""))
     } else {
       alternative<-system.file("extdata",alternative,package="MetaSubtract")
@@ -395,20 +395,20 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
   header_translations <- read.table(alternative)
   
   if (!(metamethod %in% c("FIV", "FSSW", "FSZ"))) {
-    write.table("ERROR: Please specify one of the following meta-analysis methods: FIV, FSSW, or FSZ",paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=TRUE)
+    write.table("ERROR: Please specify one of the following meta-analysis methods: FIV, FSSW, or FSZ",file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=TRUE)
     stop("ERROR: Please specify one of the following meta-analysis methods: FIV, FSSW, or FSZ")
   }
 
   if (!file.exists(metafile)) { 
     if (!file.exists(system.file("extdata",metafile,package="MetaSubtract"))) { 
-      write.table(paste("'",metafile,"' does not exist", sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(paste("'",metafile,"' does not exist", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
       stop(paste("'",metafile,"' does not exist", sep=""))
 	} else {
 	  metafile <- system.file("extdata",metafile,package="MetaSubtract")
 	}
   }
   cat(paste("Reading",metafile,"\n"))
-  write.table(paste("Reading",metafile),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+  write.table(paste("Reading",metafile),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
   meta <- read.table(metafile, header = TRUE, as.is = TRUE)
   header_meta <- names(meta)
   headersinfometa <- F_translate_headers(header = header_meta, alternative = header_translations)
@@ -417,11 +417,11 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
   if ("OTHERALLELE" %in% names(meta)) meta$OTHERALLELE <- toupper(meta$OTHERALLELE)
   markercol<-which("MARKER" %in% names(meta))
   if (markercol==0) {
-    write.table(paste("No marker names are present in '",metafile,"'. Meta results will not be corrected.", sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+    write.table(paste("No marker names are present in '",metafile,"'. Meta results will not be corrected.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
     stop(paste("No marker names are present in '",metafile,"'. Meta results will not be corrected.", sep=""))
   }
   if (any(duplicated(meta$MARKER))) {
-    write.table(paste("Duplicate marker names are present in '",metafile,"'. Meta results will not be corrected.", sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+    write.table(paste("Duplicate marker names are present in '",metafile,"'. Meta results will not be corrected.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
     stop(paste("Duplicate marker names are present in '",metafile,"'. Meta results will not be corrected.", sep=""))
   }
   
@@ -432,25 +432,25 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
     cohortfile.o <- cohortfile
     if (!file.exists(cohortfile) & !file.exists(system.file("extdata",cohortfile,package="MetaSubtract"))) { 
       warning(paste("'",cohortfile,"' does not exist. Meta results will not be corrected.", sep=""))
-      write.table(paste("'",cohortfile,"' does not exist. Meta results will not be corrected.", sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(paste("'",cohortfile,"' does not exist. Meta results will not be corrected.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
     } else {
       if (!file.exists(cohortfile)) { 
 	  	cohortfile <- system.file("extdata",cohortfile,package="MetaSubtract")
       }
       cohort <- read.table(cohortfile, header = TRUE, as.is = TRUE)
       cat(paste("Subtracting effects of",cohortfile," \n"))
-      write.table(paste("Subtracting effects of",cohortfile),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(paste("Subtracting effects of",cohortfile),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
       headersinfo <- F_translate_headers(header = names(cohort), alternative = header_translations)
       names(cohort) <- headersinfo$header_h
       if ("EFFECTALLELE" %in% names(cohort)) cohort$EFFECTALLELE <- toupper(cohort$EFFECTALLELE)
       if ("OTHERALLELE" %in% names(cohort)) cohort$OTHERALLELE <- toupper(cohort$OTHERALLELE)
       markercol2<-which("MARKER" %in% names(cohort))
       if (markercol2==0) {
-        write.table(paste("No marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+        write.table(paste("No marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
         stop(paste("No marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""))
       }
       if (any(duplicated(cohort$MARKER))) {
-        write.table(paste("Duplicate marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+        write.table(paste("Duplicate marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
         stop(paste("Duplicate marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""))
       }
 
@@ -463,31 +463,31 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
           meta_cohort[subset, c("BETA.cohort")] <- -meta_cohort[subset, c("BETA.cohort")]
           if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
           meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- meta_cohort[subset, c("OTHERALLELE.cohort", "EFFECTALLELE.cohort")]
-          write.table(paste(" - For",sum(subset),"markers alleles have been flipped"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+          write.table(paste(" - For",sum(subset),"markers alleles have been flipped"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 		} else {
           if ("OTHERALLELE.meta" %in% names(meta_cohort)) {
 		    subset2 <- subset & !is.na(meta_cohort$OTHERALLELE.meta) & meta_cohort$OTHERALLELE.meta == meta_cohort$EFFECTALLELE.cohort
             meta_cohort[subset2, c("BETA.cohort")] <- -meta_cohort[subset2, c("BETA.cohort")]
             meta_cohort[subset2, c("EAF.cohort")] <- 1-meta_cohort[subset2, c("EAF.cohort")]
             meta_cohort[subset2, "EFFECTALLELE.cohort"] <- meta_cohort[subset2, "EFFECTALLELE.meta"]
-            write.table(paste(" - For",sum(subset2),"markers alleles have been flipped"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+            write.table(paste(" - For",sum(subset2),"markers alleles have been flipped"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 		  } else {
             meta_cohort[subset, c("BETA.cohort")] <- -meta_cohort[subset, c("BETA.cohort")]
             if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
             meta_cohort[subset, "EFFECTALLELE.cohort"] <- meta_cohort[subset, "EFFECTALLELE.meta"]
-            write.table(paste(" - For",sum(subset),"markers alleles have been flipped"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+            write.table(paste(" - For",sum(subset),"markers alleles have been flipped"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 		  }	
         } 
 		
         # strand switch of alleles
         if ("OTHERALLELE.cohort" %in% names(meta_cohort)) { 
           subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$OTHERALLELE.cohort
-          write.table(paste(" - For",sum(subset),"markers alleles have been swapped for strand"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+          write.table(paste(" - For",sum(subset),"markers alleles have been swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
           if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "EFFECTALLELE.cohort"]), complement(meta_cohort[subset, "OTHERALLELE.cohort"])) }
 		} else {
           if ("OTHERALLELE.meta" %in% names(meta_cohort)) { 
             subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$OTHERALLELE.meta != meta_cohort$OTHERALLELE.cohort
-            write.table(paste(" - For",sum(subset),"markers alleles have been swapped for strand"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+            write.table(paste(" - For",sum(subset),"markers alleles have been swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
             if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "EFFECTALLELE.cohort"]), complement(meta_cohort[subset, "OTHERALLELE.cohort"])) }
 		  } 		    
 		}
@@ -496,14 +496,14 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
         # strand switch of alleles and flip alleles in cohort so that they match with those in the meta and adjust BETA and EAF
         if ("OTHERALLELE.cohort" %in% names(meta_cohort)) { 
           subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$OTHERALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$EFFECTALLELE.cohort
-          write.table(paste(" - For",sum(subset),"markers alleles have been flipped and swapped for strand"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+          write.table(paste(" - For",sum(subset),"markers alleles have been flipped and swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
           meta_cohort[subset, c("BETA.cohort")] <-  -meta_cohort[subset, c("BETA.cohort")]
           if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
           if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.cohort"]), complement(meta_cohort[subset, "EFFECTALLELE.cohort"])) }
 		} else {
 		  if ("OTHERALLELE.meta" %in% names(meta_cohort)) { 
             subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$OTHERALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$EFFECTALLELE.cohort
-            write.table(paste(" - For",sum(subset),"markers alleles have been flipped and swapped for strand"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+            write.table(paste(" - For",sum(subset),"markers alleles have been flipped and swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
             meta_cohort[subset, c("BETA.cohort")] <-  -meta_cohort[subset, c("BETA.cohort")]
             if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
             if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.cohort"]), complement(meta_cohort[subset, "EFFECTALLELE.cohort"])) }
@@ -521,16 +521,16 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
 	      meta_cohort[subset, c("BETA.cohort", "SE.cohort", "P.cohort")] <- NA 
 		  write.table(meta_cohort[subset,c("MARKER", "EFFECTALLELE.meta", "OTHERALLELE.meta", "EFFECTALLELE.cohort", "OTHERALLELE.cohort")],paste(cohortfile,".allele_mismatch.txt",sep=""), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t") 
 	    }
-	    write.table(s,paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+	    write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 	  } else {
-        write.table(paste(" - No alleles are given, so effects are assumed to be given for same allele as in the meta summary statistics."),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+        write.table(paste(" - No alleles are given, so effects are assumed to be given for same allele as in the meta summary statistics."),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
       }
 	  
       # added by L.Corbin 7th August 2017
       # corrects error which was leading to assignment of adjusted betas to wrong SNPs
       meta_cohort <- meta_cohort[order(meta_cohort$order),]
       # end of edit
-      adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile.o==cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort, logfile=paste0(dir,"/",logfile), names(meta), names(cohort), index=which(cohortfile.o==cohortfiles))
+      adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile.o==cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort, logfile=file.path(dir,logfile), names(meta), names(cohort), index=which(cohortfile.o==cohortfiles))
 
       s <- " Columns that have been corrected are: "
       for (i in names(adj)) {
@@ -543,7 +543,7 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       }
       s <- paste(substr(s,1,38), substr(s,42,nchar(s)))
       cat(paste(s," \n"))
-      write.table(s,paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 
 	  names(adj)<-gsub(".adj","",names(adj))
       s <- " No corrections have been made for: "
@@ -556,7 +556,7 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       }
       s <- paste(substr(s,1,35), substr(s,39,nchar(s)))
       cat(paste(s," \n \n"))
-      write.table(paste(s," \n"),paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(paste(s," \n"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
     }
   }
   meta <- meta[order(meta$order),]
@@ -571,18 +571,18 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
     if (is.character(savefile)) {
 	  s <- paste("Corrected meta summary statistics are saved to ",savefile,".",sep="")
 	  cat(paste(s,"\n"))
-	  write.table(s,paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
+	  write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 	  if (substr(savefile,nchar(savefile)-2,nchar(savefile)) == ".gz") {
-        write.table(meta.adj, gzfile(paste0(dir,"/",savefile)), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
+        write.table(meta.adj, gzfile(file.path(dir,savefile)), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
 	  } else {
-        write.table(meta.adj, paste0(dir,"/",savefile), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
+        write.table(meta.adj, file.path(dir,savefile), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
 	  }	
 	} else {
 	  s <- paste(savefile," is not a character string. Corrected meta summary statistics have been saved to 'meta.results_corrected.with.MetaSubtract.txt.gz'.",sep="")
 	  cat(paste(s,"\n"))
 	  savefile <- "meta.results_corrected.with.MetaSubtract.txt.gz"
-	  write.table(s,paste0(dir,"/",logfile),col.names=F,row.names=F,quote=F,append=T)
-      write.table(meta.adj, paste0(dir,"/",savefile), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
+	  write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(meta.adj, file.path(dir,savefile), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
     }
   }	
 	

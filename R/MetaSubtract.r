@@ -81,7 +81,7 @@ subtract.directions <- function (meta_cohort, logfile = "MetaSubtract.log") {
   return(list(meta_directions.adj[,1],adj=adj))
 }
 
-meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, logfile = "MetaSubtract.log", namesmeta, namescohort, index = 1) {
+meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, logfile = "MetaSubtract.log", namesmeta, namescohort, index = 1, dir = tempdir()) {
   if (index==1) {
     cat(paste(" - Pre-set genomic control lambda of the imported meta summary statistics = ",format(lambda.meta, digits=4)," \n", sep=""))
     write.table(paste(" - Pre-set genomic control lambda of the imported meta summary statistics = ",format(lambda.meta, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
@@ -130,7 +130,7 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
           if (adj_directions[[2]]) meta_cohort$DIRECTIONS.adj <- adj_directions[[1]]
         }
         meta_cohort$SE.cohort <- meta_cohort$SE.cohort/sqrt(lambda.cohort)
-        
+			
         subset <- which(!is.na(meta_cohort$BETA.cohort) & !is.na(meta_cohort$SE.cohort))
 
         meta.weight <- 1/(meta_cohort$SE.adj[subset])^2
@@ -154,6 +154,7 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.cohort[subset]*meta_cohort$EAF.cohort[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.cohort[subset])
         if ("N.cohort" %in% names(meta_cohort)) meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.cohort[subset]
         if ("NSTUDIES" %in% names(meta_cohort)) meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
+print("test4")
 
         if ("QHET" %in% names(meta_cohort)) {
 		  meta_cohort$QHET.adj <- meta_cohort$QHET
@@ -161,6 +162,7 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
           meta_cohort$QHETP.adj <- 1-pchisq(meta_cohort$QHET.adj,meta_cohort$NSTUDIES.adj-1)
           meta_cohort$I2HET.adj <- 100*(meta_cohort$QHET.adj-meta_cohort$NSTUDIES.adj+1)/meta_cohort$QHET.adj
         }
+print("test5")
 
         if ("Z" %in% names(meta_cohort) | "Z.meta" %in% names(meta_cohort)) meta_cohort$Z.adj[subset] <- meta_cohort$BETA.adj[subset] / meta_cohort$SE.adj[subset] 
 		
@@ -359,7 +361,7 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
   return(adj)
 }
 
-meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", save.as.data.frame = TRUE, savefile = "meta.results_corrected.with.MetaSubtract.txt.gz", logfile = "MetaSubtract.log", dir=tempdir()) {
+meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", save.as.data.frame = TRUE, savefile = "meta.results_corrected.with.MetaSubtract.txt.gz", logfile = "MetaSubtract.log", dir = tempdir()) {
   cat(paste("Analysis started",date(),"\n"))
   if (!is.character(dir)) {
     stop(paste("Invalid format of dir '",dir,"'. Current directory is ",getwd(), sep=""))	
@@ -519,7 +521,7 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
 	    if (sum(subset)>0) { 
           cat(paste(s," \n"))
 	      meta_cohort[subset, c("BETA.cohort", "SE.cohort", "P.cohort")] <- NA 
-		  write.table(meta_cohort[subset,c("MARKER", "EFFECTALLELE.meta", "OTHERALLELE.meta", "EFFECTALLELE.cohort", "OTHERALLELE.cohort")],paste(cohortfile,".allele_mismatch.txt",sep=""), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t") 
+		  write.table(meta_cohort[subset,c("MARKER", "EFFECTALLELE.meta", "OTHERALLELE.meta", "EFFECTALLELE.cohort", "OTHERALLELE.cohort")],file.path(dir,paste0(basename(cohortfile),".allele_mismatch.txt")), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t") 
 	    }
 	    write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 	  } else {
@@ -530,7 +532,9 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       # corrects error which was leading to assignment of adjusted betas to wrong SNPs
       meta_cohort <- meta_cohort[order(meta_cohort$order),]
       # end of edit
-      adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile.o==cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort, logfile=file.path(dir,logfile), names(meta), names(cohort), index=which(cohortfile.o==cohortfiles))
+
+	  # adjusting meta-GWAS summary statistic for current cohort's GWAD results
+      adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile.o==cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort, logfile = file.path(dir,logfile), names(meta), names(cohort), index=which(cohortfile.o==cohortfiles))
 
       s <- " Columns that have been corrected are: "
       for (i in names(adj)) {

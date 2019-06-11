@@ -59,7 +59,7 @@ subtract.directions <- function (meta_cohort, logfile = "MetaSubtract.log") {
 	}
   }
   if (maxr>0.99) { 
-	s<-paste(" - Concordance of cohort's directions with those from column ",ic," of directions in meta summary statistics is ",signif(maxr,2),".",sep="")
+	s<-paste(" - Concordance of cohort's directions with those from column ",ic," of directions in meta-GWAS summary statistics is ",signif(maxr,2),".",sep="")
     write.table(s,logfile,col.names=F,row.names=F,quote=F,append=T)
     meta_directions.adj <- meta_directions[, -ic]
     meta_directions.adj[meta_directions.adj==-1] <- "-"
@@ -74,7 +74,7 @@ subtract.directions <- function (meta_cohort, logfile = "MetaSubtract.log") {
   } else {
 	meta_directions.adj <- data.frame(v1=meta_cohort$DIRECTIONS,v2=NA)
 	adj <- FALSE
-	s<-paste(" - WARNING: No column of directions in meta summary statistics matches well with those of the cohort (max concordance=",signif(maxr,2),"). Directions are not corrected and input data should be checked (quality filters might have been applied before meta-analysis).",sep="")
+	s<-paste(" - WARNING: No column of directions in meta-GWAS summary statistics matches well with those of the cohort (max concordance=",signif(maxr,2),"). Directions are not corrected and input data should be checked (quality filters might have been applied before meta-analysis).",sep="")
     write.table(s,logfile,col.names=F,row.names=F,quote=F,append=T)
     cat(paste(s,"\n"))
   }
@@ -83,16 +83,16 @@ subtract.directions <- function (meta_cohort, logfile = "MetaSubtract.log") {
 
 meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, logfile = "MetaSubtract.log", namesmeta, namescohort, index = 1, dir = tempdir()) {
   if (index==1) {
-    cat(paste(" - Pre-set genomic control lambda of the imported meta summary statistics = ",format(lambda.meta, digits=4)," \n", sep=""))
-    write.table(paste(" - Pre-set genomic control lambda of the imported meta summary statistics = ",format(lambda.meta, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+    cat(paste(" - Pre-set genomic control lambda of the imported meta-GWAS summary statistics = ",format(lambda.meta, digits=4)," \n", sep=""))
+    write.table(paste(" - Pre-set genomic control lambda of the imported meta-GWAS summary statistics = ",format(lambda.meta, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   } else {
     if ("P.meta" %in% names(meta_cohort)) {
 	  lambda.meta <- GClambda(meta_cohort$P.meta)
 	} else if ("P" %in% namesmeta) {
 	  lambda.meta <- GClambda(meta_cohort$P)
     }	
-    cat(paste(" - Computed genomic control lambda of the imported meta summary statistics = ",format(lambda.meta, digits=4)," \n", sep=""))
-    write.table(paste(" - Computed genomic control lambda of the imported meta summary statistics = ",format(lambda.meta, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+    cat(paste(" - Computed genomic control lambda of the imported meta-GWAS summary statistics = ",format(lambda.meta, digits=4)," \n", sep=""))
+    write.table(paste(" - Computed genomic control lambda of the imported meta-GWAS summary statistics = ",format(lambda.meta, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   }
   
   if (calculate_lambdas.cohort) {
@@ -141,12 +141,12 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         if (gc_meta) {
           if (calculate_lambda.meta) {
             lambda.meta.adj <- GClambda(meta_cohort$P.adj)
-            cat(paste(" - Genomic control lambda calculated from the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
-            write.table(paste(" - Genomic control lambda calculated from the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+            cat(paste(" - Genomic control lambda calculated from the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Genomic control lambda calculated from the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
     	} else {
             lambda.meta.adj <- lambda.meta
-            cat(paste(" - Pre-set genomic control lambda applied to the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
-            write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+            cat(paste(" - Pre-set genomic control lambda applied to the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           }
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/(meta_cohort$SE.adj[subset]*sqrt(lambda.meta.adj)))
         }
@@ -154,36 +154,34 @@ meta.min.1 <- function(meta_cohort, metamethod = "FIV", lambda.meta = 1, lambda.
         if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort$EAF.adj[subset] <- (2*meta_cohort$N.adj[subset]*meta_cohort$EAF.adj[subset]-2*meta_cohort$N.cohort[subset]*meta_cohort$EAF.cohort[subset])/(2*meta_cohort$N.adj[subset]-2*meta_cohort$N.cohort[subset])
         if ("N.cohort" %in% names(meta_cohort)) meta_cohort$N.adj[subset] <- meta_cohort$N.adj[subset]-meta_cohort$N.cohort[subset]
         if ("NSTUDIES" %in% names(meta_cohort)) meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
-print("test4")
 
         if ("QHET" %in% names(meta_cohort)) {
-		  meta_cohort$QHET.adj <- meta_cohort$QHET
-		  meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
+    		  meta_cohort$QHET.adj <- meta_cohort$QHET
+		      meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
           meta_cohort$QHETP.adj <- 1-pchisq(meta_cohort$QHET.adj,meta_cohort$NSTUDIES.adj-1)
           meta_cohort$I2HET.adj <- 100*(meta_cohort$QHET.adj-meta_cohort$NSTUDIES.adj+1)/meta_cohort$QHET.adj
         }
-print("test5")
 
         if ("Z" %in% names(meta_cohort) | "Z.meta" %in% names(meta_cohort)) meta_cohort$Z.adj[subset] <- meta_cohort$BETA.adj[subset] / meta_cohort$SE.adj[subset] 
 		
         vars <- c("LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj","QHET.adj", "QHETP.adj", "I2HET.adj", "Z.adj")
-		adj <- meta_cohort[,c("BETA.adj", "SE.adj")]
-		if ("P" %in% namesmeta) adj <- data.frame(adj,P.adj=meta_cohort$P.adj)
-		for (var in vars) {
-		  if (var %in% names(meta_cohort)) {
-		    if (any(!is.na(meta_cohort[,var]))) {
+		    adj <- meta_cohort[,c("BETA.adj", "SE.adj")]
+		    if ("P" %in% namesmeta) adj <- data.frame(adj,P.adj=meta_cohort$P.adj)
+		    for (var in vars) {
+		      if (var %in% names(meta_cohort)) {
+		        if (any(!is.na(meta_cohort[,var]))) {
               adj <- data.frame(adj, var=meta_cohort[,var])
-			  names(adj)[names(adj)=="var"] <- var
-			}
+			        names(adj)[names(adj)=="var"] <- var
+			      }
           }
-		}
+		    }
       } else { 
         write.table("ERROR: 'BETA' or 'SE' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'BETA' or 'SE' not found in cohort results")
       }
     } else {
-      write.table("ERROR: 'BETA' or 'SE' not found in meta summary statistics",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
-      stop("ERROR: 'BETA' or 'SE' not found in meta summary statistics")
+      write.table("ERROR: 'BETA' or 'SE' not found in meta-GWAS summary statistics",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+      stop("ERROR: 'BETA' or 'SE' not found in meta-GWAS summary statistics")
     }
   } else if (toupper(metamethod) == "FSSW") { #fixed effect sample size weighted
     cat(" - Assuming a fixed-effects sample size weighted meta-analysis method \n")
@@ -194,18 +192,18 @@ print("test5")
         meta_cohort$BETA.adj <- meta_cohort$BETA.meta
         meta_cohort$N.adj <- meta_cohort$N.meta
         if ("SE.meta" %in% names(meta_cohort)) { 
-		  meta_cohort$SE.adj <- meta_cohort$SE.meta/sqrt(lambda.meta)
+		      meta_cohort$SE.adj <- meta_cohort$SE.meta/sqrt(lambda.meta)
           meta_cohort$P.adj <- 2*pnorm(-abs(meta_cohort$BETA.adj)/meta_cohort$SE.adj) 
           if ("SE.cohort" %in% names(meta_cohort)) meta_cohort$SE.cohort <- meta_cohort$SE.cohort/sqrt(lambda.cohort)
-		} else if ("SE" %in% namesmeta) { 
-		  meta_cohort$SE.adj <- meta_cohort$SE/sqrt(lambda.meta) 
-		}
-		if ("LP" %in% names(meta_cohort)) meta_cohort$LP.adj <- -log10(meta_cohort$P.adj)
+		    } else if ("SE" %in% namesmeta) { 
+		      meta_cohort$SE.adj <- meta_cohort$SE/sqrt(lambda.meta) 
+		    }
+		    if ("LP" %in% names(meta_cohort)) meta_cohort$LP.adj <- -log10(meta_cohort$P.adj)
         if ("EAF.meta" %in% names(meta_cohort)) { meta_cohort$EAF.adj <- meta_cohort$EAF.meta } else { meta_cohort$EAF.adj <- NA }
         if ("NSTUDIES" %in% names(meta_cohort)) { meta_cohort$NSTUDIES.adj <- meta_cohort$NSTUDIES } else { meta_cohort$NSTUDIES.adj <- NA }
         meta_cohort$DIRECTIONS.adj <- NA
-		if ("DIRECTIONS" %in% names(meta_cohort)) { 
-		  adj_directions <- subtract.directions(meta_cohort, logfile)
+		    if ("DIRECTIONS" %in% names(meta_cohort)) { 
+		      adj_directions <- subtract.directions(meta_cohort, logfile)
           if (adj_directions[[2]]) meta_cohort$DIRECTIONS.adj <- adj_directions[[1]]
         }
 
@@ -216,25 +214,25 @@ print("test5")
         meta_cohort$BETA.adj[subset] <- (meta.weight*meta_cohort$BETA.adj[subset]-cohort.weight*meta_cohort$BETA.cohort[subset])/(meta.weight-cohort.weight)
         if ("SE.adj" %in% names(meta_cohort)) meta_cohort$SE.adj[subset] <- sqrt(1/(1/(meta_cohort$SE.adj[subset])^2-1/(meta_cohort$SE.cohort[subset])^2))
         if ("P.adj" %in% names(meta_cohort)) {
-		  meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/meta_cohort$SE.adj[subset])
+		      meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/meta_cohort$SE.adj[subset])
           if (gc_meta) {
             if (calculate_lambda.meta) {
               lambda.meta.adj <- GClambda(meta_cohort$P.adj)
-              cat(paste(" - Genomic control lambda calculated from the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
-              write.table(paste(" - Genomic control lambda calculated from the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+              cat(paste(" - Genomic control lambda calculated from the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+              write.table(paste(" - Genomic control lambda calculated from the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
             } else {
               lambda.meta.adj <- lambda.meta
-              cat(paste(" - Pre-set genomic control lambda applied to the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
-              write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+              cat(paste(" - Pre-set genomic control lambda applied to the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+              write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
             }
             meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$BETA.adj[subset])/(meta_cohort$SE.adj[subset]*sqrt(lambda.meta.adj)))
           }
-		} else {
+		    } else {
           if (gc_meta) {
-		    s <- "No genomic control correction is applied as there are no P-values in the meta summary statistics file."
-			cat(paste(s,"\n"))
+		        s <- "No genomic control correction is applied as there are no P-values in the meta-GWAS summary statistics file."
+			      cat(paste(s,"\n"))
             write.table(s,logfile,col.names=F,row.names=F,quote=F,append=TRUE)
-		  }
+     		  }
         }
 		
         if ("LP.adj" %in% names(meta_cohort)) meta_cohort$LP.adj[subset] <- -log10(meta_cohort$P.adj[subset])
@@ -243,34 +241,34 @@ print("test5")
         if ("NSTUDIES" %in% names(meta_cohort)) meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
 
         if ("QHET" %in% names(meta_cohort)) {
-		  meta_cohort$QHET.adj <- meta_cohort$QHET
-		  meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
+		      meta_cohort$QHET.adj <- meta_cohort$QHET
+		      meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
           meta_cohort$QHETP.adj <- 1-pchisq(meta_cohort$QHET.adj,meta_cohort$NSTUDIES.adj-1)
           meta_cohort$I2HET.adj <- 100*(meta_cohort$QHET.adj-meta_cohort$NSTUDIES.adj+1)/meta_cohort$QHET.adj
         }
 		
         if ("Z.meta" %in% names(meta_cohort)) { 
-		  meta_cohort$Z.adj[subset] <- meta_cohort$BETA.adj[subset] / meta_cohort$SE.adj[subset] 
-		}
+		      meta_cohort$Z.adj[subset] <- meta_cohort$BETA.adj[subset] / meta_cohort$SE.adj[subset] 
+		    }
 
         vars <- c("LP.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj","QHET.adj", "QHETP.adj", "I2HET.adj", "Z.adj")
-		adj <- meta_cohort[,c("BETA.adj", "SE.adj")]
-		if ("P" %in% namesmeta) adj <- data.frame(adj,P.adj=meta_cohort$P.adj)
-		for (var in vars) {
-		  if (var %in% names(meta_cohort)) {
-		    if (any(!is.na(meta_cohort[,var]))) {
+		    adj <- meta_cohort[,c("BETA.adj", "SE.adj")]
+		    if ("P" %in% namesmeta) adj <- data.frame(adj,P.adj=meta_cohort$P.adj)
+		    for (var in vars) {
+		      if (var %in% names(meta_cohort)) {
+		        if (any(!is.na(meta_cohort[,var]))) {
               adj <- data.frame(adj, var=meta_cohort[,var])
-			  names(adj)[names(adj)=="var"] <- var
-			}
+			        names(adj)[names(adj)=="var"] <- var
+			      }
           }
-		}
+		    }
       } else { 
         write.table("ERROR: 'BETA' or 'N' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'BETA' or 'N' not found in cohort results")
       }
     } else {
-      write.table("ERROR: 'BETA' or 'N' not found in meta summary statistics",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
-      stop("ERROR: 'BETA' or 'N' not found in meta summary statistics")
+      write.table("ERROR: 'BETA' or 'N' not found in meta-GWAS summary statistics",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+      stop("ERROR: 'BETA' or 'N' not found in meta-GWAS summary statistics")
     }
   } else if (toupper(metamethod) == "FSZ") { #fixed effects sample size z-score method
     cat(" - Assuming a fixed-effects sqrt sample size z-score weighted meta-analysis method \n")
@@ -279,6 +277,8 @@ print("test5")
     if (!("Z.meta" %in% names(meta_cohort))) {
       if ("BETA.meta" %in% names(meta_cohort) & "SE.meta" %in% names(meta_cohort)) {
         meta_cohort$Z.meta <- meta_cohort$BETA.meta/meta_cohort$SE.meta
+      } else {
+        if ("Z" %in% namesmeta) meta_cohort$Z.meta <- meta_cohort$Z
       }
     }
     if (!("Z.cohort" %in% names(meta_cohort))) {
@@ -293,12 +293,12 @@ print("test5")
         if ("SE.meta" %in% names(meta_cohort)) { meta_cohort$SE.adj <- meta_cohort$SE.meta/sqrt(lambda.meta) } else if ("SE" %in% namesmeta) { meta_cohort$SE.adj <- meta_cohort$SE/sqrt(lambda.meta) } 
         meta_cohort$P.adj <- 2*pnorm(-abs(meta_cohort$Z.adj))
         if ("LP" %in% namesmeta) meta_cohort$LP.adj <- -log10(meta_cohort$P.adj)
-		if ("EAF.meta" %in% names(meta_cohort)) { meta_cohort$EAF.adj <- meta_cohort$EAF.meta } else { meta_cohort$EAF.adj <- NA } 
+		    if ("EAF.meta" %in% names(meta_cohort)) { meta_cohort$EAF.adj <- meta_cohort$EAF.meta } else { meta_cohort$EAF.adj <- NA } 
         meta_cohort$N.adj <- meta_cohort$N.meta
         if ("NSTUDIES" %in% names(meta_cohort)) meta_cohort$NSTUDIES.adj <- meta_cohort$NSTUDIES
         meta_cohort$DIRECTIONS.adj <- NA
-		if ("DIRECTIONS" %in% names(meta_cohort)) { 
-		  adj_directions <- subtract.directions(meta_cohort, logfile)
+		    if ("DIRECTIONS" %in% names(meta_cohort)) { 
+		      adj_directions <- subtract.directions(meta_cohort, logfile)
           if (adj_directions[[2]]) meta_cohort$DIRECTIONS.adj <- adj_directions[[1]]
         }
 
@@ -312,12 +312,12 @@ print("test5")
         if (gc_meta) {
           if (calculate_lambda.meta) {
             lambda.meta.adj <- GClambda(meta_cohort$P.adj)
-            cat(paste(" - Genomic control lambda calculated from the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
-            write.table(paste(" - Genomic control lambda calculated from the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+            cat(paste(" - Genomic control lambda calculated from the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Genomic control lambda calculated from the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           } else {
             lambda.meta.adj <- lambda.meta
-            cat(paste(" - Pre-set genomic control lambda applied to the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
-            write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+            cat(paste(" - Pre-set genomic control lambda applied to the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))
+            write.table(paste(" - Pre-set genomic control lambda applied to the corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
           }
           meta_cohort$P.adj[subset] <- 2*pnorm(-abs(meta_cohort$Z.adj[subset]/sqrt(lambda.meta.adj)))
         }
@@ -327,41 +327,41 @@ print("test5")
         if ("NSTUDIES" %in% names(meta_cohort)) meta_cohort$NSTUDIES.adj[subset] <- meta_cohort$NSTUDIES.adj[subset]-1
 
         if ("QHET" %in% names(meta_cohort) & "BETA.adj" %in% names(meta_cohort) & "SE.adj" %in% names(meta_cohort) & "BETA.meta" %in% names(meta_cohort) & "SE.meta" %in% names(meta_cohort) & "BETA.cohort" %in% names(meta_cohort) & "SE.cohort" %in% names(meta_cohort)) {
-		  meta_cohort$QHET.adj <- meta_cohort$QHET
-		  meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
+		      meta_cohort$QHET.adj <- meta_cohort$QHET
+		      meta_cohort$QHET.adj[subset] <- meta_cohort$QHET[subset]*meta_cohort$SE.adj[subset]^2/meta_cohort$SE.meta[subset]^2-(meta_cohort$BETA.adj[subset]-meta_cohort$BETA.meta[subset])^2-1/meta_cohort$SE.cohort[subset]^2*(meta_cohort$BETA.cohort[subset]-meta_cohort$BETA.meta[subset])^2*meta_cohort$SE.adj[subset]^2
           meta_cohort$QHETP.adj <- 1-pchisq(meta_cohort$QHET.adj,meta_cohort$NSTUDIES.adj-1)
           meta_cohort$I2HET.adj <- 100*(meta_cohort$QHET.adj-meta_cohort$NSTUDIES.adj+1)/meta_cohort$QHET.adj
         }
 
         vars <- c("LP.adj", "BETA.adj", "SE.adj", "EAF.adj", "N.adj", "NSTUDIES.adj", "DIRECTIONS.adj","QHET.adj", "QHETP.adj", "I2HET.adj")
-		adj <- meta_cohort[,c("Z.adj")]
-		if ("P" %in% namesmeta) adj <- data.frame(adj,P.adj=meta_cohort$P.adj)
-		for (var in vars) {
-		  if (var %in% names(meta_cohort)) {
-		    if (any(!is.na(meta_cohort[,var]))) {
+    		adj <- meta_cohort[,c("Z.adj")]
+    		if ("P" %in% namesmeta) adj <- data.frame(adj,P.adj=meta_cohort$P.adj)
+    		for (var in vars) {
+    		  if (var %in% names(meta_cohort)) {
+		        if (any(!is.na(meta_cohort[,var]))) {
               adj <- data.frame(adj, var=meta_cohort[,var])
-			  names(adj)[names(adj)=="var"] <- var
-			}
+		          names(adj)[names(adj)=="var"] <- var
+		        }
           }
-		}
+		    }
 
       } else { 
         write.table("ERROR: 'Z' or 'N' not found in cohort results",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
         stop("ERROR: 'Z' or 'N' not found in cohort results")
       }
     } else {
-      write.table("ERROR: 'Z' or 'N' not found in meta summary statistics",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
-      stop("ERROR: 'Z' or 'N' not found in meta summary statistics")
+      write.table("ERROR: 'Z' or 'N' not found in meta-GWAS summary statistics",logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+      stop("ERROR: 'Z' or 'N' not found in meta-GWAS summary statistics")
     }
   }
   
   lambda.meta.adj <- GClambda(adj$P.adj)
-  cat(paste(" - Genomic control lambda calculated of the final corrected meta summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))  
-  write.table(paste(" - Genomic control lambda calculated of the final corrected meta summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
+  cat(paste(" - Genomic control lambda calculated of the final corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4)," \n", sep=""))  
+  write.table(paste(" - Genomic control lambda calculated of the final corrected meta-GWAS summary statistics = ",format(lambda.meta.adj, digits=4), sep=""),logfile,col.names=F,row.names=F,quote=F,append=TRUE)
   return(adj)
 }
 
-meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", save.as.data.frame = TRUE, savefile = "meta.results_corrected.with.MetaSubtract.txt.gz", logfile = "MetaSubtract.log", dir = tempdir()) {
+meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta = 1, lambdas.cohort = 1, gc_meta = TRUE, calculate_lambda.meta = TRUE, calculate_lambdas.cohort = TRUE, alternative = "alternative_headers.txt", save.as.data.frame = TRUE, savefile = "meta.results_corrected.with.MetaSubtract.txt.gz", logfile = "MetaSubtract.log", dir = tempdir(), ...) {
   cat(paste("Analysis started",date(),"\n"))
   if (!is.character(dir)) {
     stop(paste("Invalid format of dir '",dir,"'. Current directory is ",getwd(), sep=""))	
@@ -411,8 +411,10 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
   }
   cat(paste("Reading",metafile,"\n"))
   write.table(paste("Reading",metafile),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-  meta <- read.table(metafile, header = TRUE, as.is = TRUE)
-  header_meta <- names(meta)
+  meta <- read.table(metafile, header = TRUE, as.is = TRUE, ...)
+  write.table(paste0(" Read in ",nrow(meta)," rows of meta-data."),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+  cat(paste0(" Read in ",nrow(meta)," rows of meta-data.","\n"))
+  header_meta <- toupper(names(meta))
   headersinfometa <- F_translate_headers(header = header_meta, alternative = header_translations)
   names(meta) <- headersinfometa$header_h
   if ("EFFECTALLELE" %in% names(meta)) meta$EFFECTALLELE <- toupper(meta$EFFECTALLELE)
@@ -439,46 +441,54 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       if (!file.exists(cohortfile)) { 
 	  	cohortfile <- system.file("extdata",cohortfile,package="MetaSubtract")
       }
-      cohort <- read.table(cohortfile, header = TRUE, as.is = TRUE)
       cat(paste("Subtracting effects of",cohortfile," \n"))
       write.table(paste("Subtracting effects of",cohortfile),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+      cohort <- read.table(cohortfile, header = TRUE, as.is = TRUE, ...)
+      write.table(paste0(" Read in ",nrow(cohort)," rows of cohort data."),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+      cat(paste0(" Read in ",nrow(cohort)," rows of cohort data.","\n"))
       headersinfo <- F_translate_headers(header = names(cohort), alternative = header_translations)
       names(cohort) <- headersinfo$header_h
       if ("EFFECTALLELE" %in% names(cohort)) cohort$EFFECTALLELE <- toupper(cohort$EFFECTALLELE)
       if ("OTHERALLELE" %in% names(cohort)) cohort$OTHERALLELE <- toupper(cohort$OTHERALLELE)
       markercol2<-which("MARKER" %in% names(cohort))
       if (markercol2==0) {
-        write.table(paste("No marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-        stop(paste("No marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""))
+        write.table(paste("No marker names are present in '",cohortfile,"'. Please fix. Meta results will not be corrected for this cohort.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+        stop(paste("No marker names are present in '",cohortfile,"'. Please fix. Meta results will not be corrected for this cohort.", sep=""))
       }
       if (any(duplicated(cohort$MARKER))) {
-        write.table(paste("Duplicate marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-        stop(paste("Duplicate marker names are present in '",cohortfile,"'. Meta results will not be corrected for this cohort.", sep=""))
+        write.table(paste("Duplicate marker names are present in '",cohortfile,"'. Please fix. Meta results will not be corrected for this cohort.", sep=""),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+        stop(paste("Duplicate marker names are present in '",cohortfile,"'. Please fix. Meta results will not be corrected for this cohort.", sep=""))
       }
 
       meta_cohort <- merge(meta, cohort, by = "MARKER", all.x = TRUE, all.y = FALSE, suffixes=c(".meta", ".cohort"))
- 
+      if ("BETA" %in% names(cohort) & !("BETA.cohort" %in% names(meta_cohort))) {
+        names(meta_cohort)[which(names(meta_cohort)=="BETA")] <- "BETA.cohort"
+      }  
+      
       if ("EFFECTALLELE.meta" %in% names(meta_cohort) & "EFFECTALLELE.cohort" %in% names(meta_cohort)) {
         # flip alleles in cohort so that they match with those in the meta and adjust BETA and EAF
         subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$EFFECTALLELE.cohort
         if ("OTHERALLELE.cohort" %in% names(meta_cohort)) { 
-          meta_cohort[subset, c("BETA.cohort")] <- -meta_cohort[subset, c("BETA.cohort")]
+          if ("BETA.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("BETA.cohort")] <- -meta_cohort[subset, c("BETA.cohort")]
+          if ("Z.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("Z.cohort")] <- -meta_cohort[subset, c("Z.cohort")]
           if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
           meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- meta_cohort[subset, c("OTHERALLELE.cohort", "EFFECTALLELE.cohort")]
           write.table(paste(" - For",sum(subset),"markers alleles have been flipped"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-		} else {
+		    } else {
           if ("OTHERALLELE.meta" %in% names(meta_cohort)) {
-		    subset2 <- subset & !is.na(meta_cohort$OTHERALLELE.meta) & meta_cohort$OTHERALLELE.meta == meta_cohort$EFFECTALLELE.cohort
-            meta_cohort[subset2, c("BETA.cohort")] <- -meta_cohort[subset2, c("BETA.cohort")]
+            subset2 <- subset & !is.na(meta_cohort$OTHERALLELE.meta) & meta_cohort$OTHERALLELE.meta == meta_cohort$EFFECTALLELE.cohort
+            if ("BETA.cohort" %in% names(meta_cohort)) meta_cohort[subset2, c("BETA.cohort")] <- -meta_cohort[subset2, c("BETA.cohort")]
+            if ("Z.cohort" %in% names(meta_cohort)) meta_cohort[subset2, c("Z.cohort")] <- -meta_cohort[subset2, c("Z.cohort")]
             meta_cohort[subset2, c("EAF.cohort")] <- 1-meta_cohort[subset2, c("EAF.cohort")]
             meta_cohort[subset2, "EFFECTALLELE.cohort"] <- meta_cohort[subset2, "EFFECTALLELE.meta"]
             write.table(paste(" - For",sum(subset2),"markers alleles have been flipped"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-		  } else {
-            meta_cohort[subset, c("BETA.cohort")] <- -meta_cohort[subset, c("BETA.cohort")]
-            if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
+		      } else {
+		        if ("BETA.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("BETA.cohort")] <- -meta_cohort[subset, c("BETA.cohort")]
+		        if ("Z.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("Z.cohort")] <- -meta_cohort[subset, c("Z.cohort")]
+		        if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
             meta_cohort[subset, "EFFECTALLELE.cohort"] <- meta_cohort[subset, "EFFECTALLELE.meta"]
             write.table(paste(" - For",sum(subset),"markers alleles have been flipped"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-		  }	
+    		  }	
         } 
 		
         # strand switch of alleles
@@ -486,31 +496,35 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
           subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$OTHERALLELE.cohort
           write.table(paste(" - For",sum(subset),"markers alleles have been swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
           if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "EFFECTALLELE.cohort"]), complement(meta_cohort[subset, "OTHERALLELE.cohort"])) }
-		} else {
+		    } else {
           if ("OTHERALLELE.meta" %in% names(meta_cohort)) { 
             subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$OTHERALLELE.meta != meta_cohort$OTHERALLELE.cohort
             write.table(paste(" - For",sum(subset),"markers alleles have been swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-            if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "EFFECTALLELE.cohort"]), complement(meta_cohort[subset, "OTHERALLELE.cohort"])) }
-		  } 		    
-		}
+            if (sum(subset>0))meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "EFFECTALLELE.cohort"]), complement(meta_cohort[subset, "OTHERALLELE.cohort"])) 
+		      } 		    
+		    }
 		
     
         # strand switch of alleles and flip alleles in cohort so that they match with those in the meta and adjust BETA and EAF
         if ("OTHERALLELE.cohort" %in% names(meta_cohort)) { 
           subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$OTHERALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$EFFECTALLELE.cohort
           write.table(paste(" - For",sum(subset),"markers alleles have been flipped and swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-          meta_cohort[subset, c("BETA.cohort")] <-  -meta_cohort[subset, c("BETA.cohort")]
-          if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
-          if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.cohort"]), complement(meta_cohort[subset, "EFFECTALLELE.cohort"])) }
-		} else {
-		  if ("OTHERALLELE.meta" %in% names(meta_cohort)) { 
+          if (sum(subset>0)) {
+            if ("BETA.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("BETA.cohort")] <-  -meta_cohort[subset, c("BETA.cohort")]
+            if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
+            meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.cohort"]), complement(meta_cohort[subset, "EFFECTALLELE.cohort"]))
+          }
+		    } else {
+		      if ("OTHERALLELE.meta" %in% names(meta_cohort)) { 
             subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$OTHERALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$EFFECTALLELE.meta != meta_cohort$EFFECTALLELE.cohort
             write.table(paste(" - For",sum(subset),"markers alleles have been flipped and swapped for strand"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-            meta_cohort[subset, c("BETA.cohort")] <-  -meta_cohort[subset, c("BETA.cohort")]
-            if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
-            if (sum(subset>0)) { meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.cohort"]), complement(meta_cohort[subset, "EFFECTALLELE.cohort"])) }
+            if (sum(subset>0)) {
+              if ("BETA.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("BETA.cohort")] <-  -meta_cohort[subset, c("BETA.cohort")]
+              if ("EAF.cohort" %in% names(meta_cohort)) meta_cohort[subset, c("EAF.cohort")] <- 1-meta_cohort[subset, c("EAF.cohort")]
+              meta_cohort[subset, c("EFFECTALLELE.cohort", "OTHERALLELE.cohort")] <- cbind(complement(meta_cohort[subset, "OTHERALLELE.cohort"]), complement(meta_cohort[subset, "EFFECTALLELE.cohort"]))
+            }
           }
-		}
+		    }
       
         # remove genetic markers that still do not match alleles
         subset = !is.na(meta_cohort$EFFECTALLELE.cohort) & !( (meta_cohort$EFFECTALLELE.meta == meta_cohort$EFFECTALLELE.meta & meta_cohort$OTHERALLELE.meta == meta_cohort$OTHERALLELE.cohort) |
@@ -518,14 +532,14 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
                	                                         (meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort) & meta_cohort$OTHERALLELE.meta == complement(meta_cohort$OTHERALLELE.cohort)) |
                                                          (meta_cohort$EFFECTALLELE.meta == complement(meta_cohort$OTHERALLELE.cohort) & meta_cohort$OTHERALLELE.meta == complement(meta_cohort$EFFECTALLELE.cohort)) )
         s<-paste(" - Number of genetic markers removed because of mismatch in alleles: ", sum(subset), " (", signif(100*sum(subset)/nrow(cohort),2), "%)",sep="")
-	    if (sum(subset)>0) { 
+	      if (sum(subset)>0) { 
           cat(paste(s," \n"))
-	      meta_cohort[subset, c("BETA.cohort", "SE.cohort", "P.cohort")] <- NA 
-		  write.table(meta_cohort[subset,c("MARKER", "EFFECTALLELE.meta", "OTHERALLELE.meta", "EFFECTALLELE.cohort", "OTHERALLELE.cohort")],file.path(dir,paste0(basename(cohortfile),".allele_mismatch.txt")), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t") 
-	    }
-	    write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
-	  } else {
-        write.table(paste(" - No alleles are given, so effects are assumed to be given for same allele as in the meta summary statistics."),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+	        meta_cohort[subset, c("BETA.cohort", "SE.cohort", "P.cohort")] <- NA 
+		      write.table(meta_cohort[subset,c("MARKER", "EFFECTALLELE.meta", "OTHERALLELE.meta", "EFFECTALLELE.cohort", "OTHERALLELE.cohort")],file.path(dir,paste0(basename(cohortfile),".allele_mismatch.txt")), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t") 
+	      }
+	      write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+	    } else {
+        write.table(paste(" - No alleles are given, so effects are assumed to be given for same allele as in the meta-GWAS summary statistics."),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
       }
 	  
       # added by L.Corbin 7th August 2017
@@ -533,14 +547,19 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       meta_cohort <- meta_cohort[order(meta_cohort$order),]
       # end of edit
 
-	  # adjusting meta-GWAS summary statistic for current cohort's GWAD results
+	    # adjusting meta-GWAS summary statistic for current cohort's GWAD results
+      write.table(paste0(" The following headers are present in the translated headers of the meta-GWAS summary statistics and the cohort results:"),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+      write.table(names(meta_cohort),file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
+      cat(paste0(" The following headers are present in the translated headers of the meta-GWAS summary statistics and the cohort results:","\n"))
+      print(names(meta_cohort))
+
       adj <- meta.min.1(meta_cohort, metamethod, lambda.meta, lambdas.cohort[which(cohortfile.o==cohortfiles)], gc_meta, calculate_lambda.meta, calculate_lambdas.cohort, logfile = file.path(dir,logfile), names(meta), names(cohort), index=which(cohortfile.o==cohortfiles))
 
       s <- " Columns that have been corrected are: "
       for (i in names(adj)) {
         orig <- sub(".adj","",i)
         if (orig %in% names(meta)) {
-		  index <- which(orig==names(meta))
+		      index <- which(orig==names(meta))
           meta[,orig] <-  adj[,i]
           s<-paste(s,header_meta[index], sep=", ")
         }  
@@ -549,11 +568,11 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
       cat(paste(s," \n"))
       write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 
-	  names(adj)<-gsub(".adj","",names(adj))
+	    names(adj)<-gsub(".adj","",names(adj))
       s <- " No corrections have been made for: "
       for (i in (1:length(header_meta))) {
         orig <- header_meta[i]
-		conv <- names(meta)[i]
+	    	conv <- names(meta)[i]
         if (!(orig %in% names(adj)) & !(conv %in% names(adj))) {
           s<-paste(s,header_meta[i], sep=", ")
         }  
@@ -573,7 +592,7 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
   
   if (!is.null(savefile) & !is.na(savefile)) {
     if (is.character(savefile)) {
-	  s <- paste("Corrected meta summary statistics are saved to ",savefile,".",sep="")
+	  s <- paste("Corrected meta-GWAS summary statistics are saved to ",savefile,".",sep="")
 	  cat(paste(s,"\n"))
 	  write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)
 	  if (substr(savefile,nchar(savefile)-2,nchar(savefile)) == ".gz") {
@@ -582,7 +601,7 @@ meta.subtract <- function(metafile, cohortfiles, metamethod = "FIV", lambda.meta
         write.table(meta.adj, file.path(dir,savefile), col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
 	  }	
 	} else {
-	  s <- paste(savefile," is not a character string. Corrected meta summary statistics have been saved to 'meta.results_corrected.with.MetaSubtract.txt.gz'.",sep="")
+	  s <- paste(savefile," is not a character string. Corrected meta-GWAS summary statistics have been saved to 'meta.results_corrected.with.MetaSubtract.txt.gz'.",sep="")
 	  cat(paste(s,"\n"))
 	  savefile <- "meta.results_corrected.with.MetaSubtract.txt.gz"
 	  write.table(s,file.path(dir,logfile),col.names=F,row.names=F,quote=F,append=T)

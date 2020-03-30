@@ -103,6 +103,14 @@ m3<-meta.subtract(metafile=metafile, cohortfiles=cohortfiles, gc_meta=FALSE,
       calculate_lambda.meta=FALSE, calculate_lambdas.cohort=FALSE, 
 	  dir=tempdir())
 head(m3)
+
+cohortfiles=c("cohort1_results.txt","cohort2_results.txt")
+# If you performed a sqrt(smaple sizes) weighted meta-analysis on the z-scores, change the
+# meta-analysis method by 'metamethod=FSZ'.
+m4<-meta.subtract(metafile=metafile, cohortfiles=cohortfiles, metamethod="FSZ", 
+      lambda.meta=1.046, dir=tempdir())
+head(m4)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
